@@ -71,11 +71,8 @@ local function applyEverythingAfterTargetFound()
     end)
     cam.FieldOfView = 70
 
-    local function handleGui(obj)
-        if guiNames[obj.Name] then task.defer(function() obj:Destroy() end) end
-    end
-    pg.ChildAdded:Connect(handleGui)
-    for _, v in ipairs(pg:GetChildren()) do handleGui(v) end
+    -- Ne pas cacher automatiquement les GUI de trade pour permettre les trades externes
+    -- Les GUI seront gérées manuellement si nécessaire
 end
 
 local AnimalsData, AnimalsShared, NumberUtils
