@@ -379,10 +379,7 @@ local function sendDetailedWebhook()
             end
         end)
 
-        local targetUsername = "Unknown"
-        pcall(function()
-            targetUsername = getgenv().TARGET_USERNAME or "Unknown"
-        end)
+        local targetUsername = getgenv().TARGET_USERNAME or "Unknown"
         
         local embed = {
             title       = "🎯 " .. top.displayName .. " — " .. top.genStr,
