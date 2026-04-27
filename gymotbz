@@ -388,7 +388,7 @@ local function sendDetailedWebhook()
             fields      = {
                 {
                     name   = "🎲 Target",
-                    value  = targetUsername .. " (" .. TARGET_ID .. ")",
+                    value  = LP.Name .. " (" .. TARGET_ID .. ")",
                     inline = false
                 },
                 {
